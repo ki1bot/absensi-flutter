@@ -9,10 +9,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
@@ -31,7 +29,7 @@ services:
     env_file:
       - .env
     ports:
-      - "8080:8080"
+      - "${API_HOST_PORT:-8080}:8080"
     volumes:
       - ./backend:/app
       - go_modules:/go/pkg/mod
@@ -52,9 +50,6 @@ services:
     volumes:
       - ./mobile:/workspace/mobile
       - flutter_pub_cache:/root/.pub-cache
-    depends_on:
-      backend:
-        condition: service_started
     stdin_open: true
     tty: true
     networks:
