@@ -205,8 +205,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 2,
+                        runSpacing: 2,
                         children: [
                           const Text(
                             'Sekolah belum terdaftar?',
