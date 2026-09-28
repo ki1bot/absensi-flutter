@@ -62,14 +62,13 @@ class HealthApi implements HealthService {
 
   @override
   Future<HealthStatus> getHealth() async {
+    final uri = Uri.parse('$baseUrl/health');
+
     final response = await _client
-        .get(
-          Uri.parse('$baseUrl/health'),
-          headers: const {'Accept': 'application/json'},
-        )
+        .get(uri, headers: const {'Accept': 'application/json'})
         .timeout(const Duration(seconds: 10));
 
-    if (response.statusCode != 200) {
+    if (response.statusCode != HttpStatus.ok) {
       throw Exception('API mengembalikan status ${response.statusCode}');
     }
 
@@ -79,7 +78,15 @@ class HealthApi implements HealthService {
       throw const FormatException('Response API tidak valid');
     }
 
-    return HealthStatus.fromJson(decoded);
+    final health = HealthStatus.fromJson(decoded);
+
+    if (health.status.isEmpty ||
+        health.service.isEmpty ||
+        health.database.isEmpty) {
+      throw const FormatException('Response health API tidak lengkap');
+    }
+
+    return health;
   }
 
   @override
