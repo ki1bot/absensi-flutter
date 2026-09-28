@@ -37,6 +37,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     networks:
       - absensi_network
 
@@ -47,9 +50,15 @@ services:
     container_name: absensi_flutter
     restart: unless-stopped
     working_dir: /workspace/mobile
+    environment:
+      GRADLE_USER_HOME: /root/.gradle
     volumes:
       - ./mobile:/workspace/mobile
       - flutter_pub_cache:/root/.pub-cache
+      - gradle_cache:/root/.gradle
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     stdin_open: true
     tty: true
     networks:
@@ -60,6 +69,7 @@ volumes:
   go_modules:
   go_build_cache:
   flutter_pub_cache:
+  gradle_cache:
 
 networks:
   absensi_network:
