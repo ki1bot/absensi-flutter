@@ -1,40 +1,29 @@
-import 'package:absensi_flutter/main.dart';
-import 'package:absensi_flutter/services/health_api.dart';
+import 'package:absensi_flutter/features/auth/login_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-class FakeHealthService implements HealthService {
-  @override
-  Future<HealthStatus> getHealth() async {
-    return HealthStatus(
-      status: 'ok',
-      service: 'absensi-api',
-      database: 'connected',
-      time: DateTime.utc(2026, 9, 28, 10, 37, 57),
-    );
-  }
-
-  @override
-  void close() {}
-}
-
 void main() {
-  testWidgets('menampilkan status API dan database terhubung', (
+  testWidgets('menampilkan halaman login E-Absensi Siswa', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(AbsensiApp(healthService: FakeHealthService()));
+    await tester.pumpWidget(
+      const ProviderScope(child: MaterialApp(home: LoginScreen())),
+    );
 
-    await tester.pumpAndSettle();
+    expect(find.text('E-Absensi Siswa'), findsOneWidget);
 
-    expect(find.text('Absensi Mobile App'), findsOneWidget);
+    expect(
+      find.text('Masuk sebagai Admin, Operator, atau Orang Tua'),
+      findsOneWidget,
+    );
 
-    expect(find.text('Flutter → Go → PostgreSQL'), findsOneWidget);
+    expect(find.text('Email'), findsOneWidget);
 
-    expect(find.text('API terhubung'), findsOneWidget);
+    expect(find.text('Password'), findsOneWidget);
 
-    expect(find.text('ok'), findsOneWidget);
+    expect(find.text('Masuk'), findsOneWidget);
 
-    expect(find.text('absensi-api'), findsOneWidget);
-
-    expect(find.text('connected'), findsOneWidget);
+    expect(find.text('Daftarkan Sekolah'), findsOneWidget);
   });
 }

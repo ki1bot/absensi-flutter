@@ -15,7 +15,6 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
-
   final _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
@@ -44,12 +43,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       switch (user.role) {
         case 'parent':
           context.go('/parent');
+          return;
 
         case 'operator':
           context.go('/scanner');
+          return;
 
+        case 'admin':
         default:
           context.go('/dashboard');
+          return;
       }
     } catch (error) {
       if (!mounted) {

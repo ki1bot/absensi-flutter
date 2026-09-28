@@ -38,12 +38,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     switch (user?.role) {
       case 'parent':
         context.go('/parent');
+        return;
 
       case 'operator':
         context.go('/scanner');
+        return;
 
+      case 'admin':
       default:
         context.go('/dashboard');
+        return;
     }
   }
 

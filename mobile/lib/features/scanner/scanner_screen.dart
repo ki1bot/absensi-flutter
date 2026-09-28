@@ -14,7 +14,6 @@ class ScannerScreen extends StatefulWidget {
 
 class _ScannerScreenState extends State<ScannerScreen> {
   final _api = ApiClient();
-
   final _controller = MobileScannerController();
 
   bool _processing = false;
@@ -32,13 +31,19 @@ class _ScannerScreenState extends State<ScannerScreen> {
       return;
     }
 
-    final value = capture.barcodes.firstOrNull?.rawValue;
+    if (capture.barcodes.isEmpty) {
+      return;
+    }
+
+    final value = capture.barcodes.first.rawValue;
 
     if (value == null || !value.startsWith('ABSENSI:')) {
       return;
     }
 
-    setState(() => _processing = true);
+    setState(() {
+      _processing = true;
+    });
 
     await _controller.stop();
 
@@ -79,28 +84,32 @@ class _ScannerScreenState extends State<ScannerScreen> {
         },
       );
     } catch (error) {
-      if (mounted) {
-        await showDialog<void>(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text('Absensi gagal'),
-              content: Text(error.toString()),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            );
-          },
-        );
+      if (!mounted) {
+        return;
       }
+
+      await showDialog<void>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Absensi gagal'),
+            content: Text(error.toString()),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
     } finally {
       if (mounted) {
-        setState(() => _processing = false);
+        setState(() {
+          _processing = false;
+        });
 
         await _controller.start();
       }
