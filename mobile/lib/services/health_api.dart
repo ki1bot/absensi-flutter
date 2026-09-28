@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
@@ -35,16 +36,29 @@ abstract class HealthService {
 
 class HealthApi implements HealthService {
   HealthApi({String? baseUrl, http.Client? client})
-    : baseUrl =
-          baseUrl ??
-          const String.fromEnvironment(
-            'API_BASE_URL',
-            defaultValue: 'http://10.0.2.2:8080',
-          ),
+    : baseUrl = baseUrl ?? _resolveBaseUrl(),
       _client = client ?? http.Client();
 
   final String baseUrl;
   final http.Client _client;
+
+  static String _resolveBaseUrl() {
+    const configuredBaseUrl = String.fromEnvironment('API_BASE_URL');
+
+    if (configuredBaseUrl.isNotEmpty) {
+      return configuredBaseUrl;
+    }
+
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8080';
+    }
+
+    if (Platform.isIOS) {
+      return 'http://localhost:8080';
+    }
+
+    return 'http://localhost:8080';
+  }
 
   @override
   Future<HealthStatus> getHealth() async {
