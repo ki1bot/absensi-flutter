@@ -47,6 +47,9 @@
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Aplikasi Absensi membutuhkan akses ke jaringan lokal untuk terhubung ke server pengembangan.</string>
 
+	<key>NSCameraUsageDescription</key>
+	<string>Kamera digunakan untuk memindai QR Code kartu siswa saat proses absensi.</string>
+
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
