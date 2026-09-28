@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/theme.dart';
+import '../../app/widgets.dart';
 import '../../core/api/api_client.dart';
 
 class StudentsScreen extends StatefulWidget {
@@ -35,7 +37,11 @@ class _StudentsScreenState extends State<StudentsScreen> {
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
+    if (mounted) {
+      setState(() {
+        _loading = true;
+      });
+    }
 
     try {
       final search = Uri.encodeQueryComponent(_searchController.text.trim());
@@ -47,10 +53,26 @@ class _StudentsScreenState extends State<StudentsScreen> {
           _students = result as List<dynamic>;
         });
       }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..clearSnackBars()
+          ..showSnackBar(SnackBar(content: Text(error.toString())));
+      }
     } finally {
       if (mounted) {
-        setState(() => _loading = false);
+        setState(() {
+          _loading = false;
+        });
       }
+    }
+  }
+
+  Future<void> _openCreate() async {
+    final changed = await context.push<bool>('/students/create');
+
+    if (changed == true) {
+      _load();
     }
   }
 
@@ -59,42 +81,73 @@ class _StudentsScreenState extends State<StudentsScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Data Siswa')),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final changed = await context.push<bool>('/students/create');
-
-          if (changed == true) {
-            _load();
-          }
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Siswa'),
+        onPressed: _openCreate,
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('Tambah Siswa'),
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
-            child: SearchBar(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
+            child: TextField(
               controller: _searchController,
-              hintText: 'Cari siswa...',
-              leading: const Icon(Icons.search),
+              textInputAction: TextInputAction.search,
               onSubmitted: (_) => _load(),
+              decoration: InputDecoration(
+                hintText: 'Cari nama, NIS, atau kelas',
+                prefixIcon: const Icon(Icons.search_rounded),
+                suffixIcon: _searchController.text.isEmpty
+                    ? null
+                    : IconButton(
+                        onPressed: () {
+                          _searchController.clear();
+                          _load();
+                        },
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+              ),
+              onChanged: (_) {
+                setState(() {});
+              },
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: SectionTitle(
+              title: 'Daftar siswa',
+              subtitle: '${_students.length} siswa ditemukan',
+            ),
+          ),
+          const SizedBox(height: 12),
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
+                : _students.isEmpty
+                ? const EmptyState(
+                    icon: Icons.person_search_outlined,
+                    title: 'Belum ada siswa',
+                    message: 'Tambahkan siswa baru atau ubah kata pencarian.',
+                  )
                 : RefreshIndicator(
                     onRefresh: _load,
                     child: ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
                       itemCount: _students.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 8),
+                      separatorBuilder: (_, _) => const SizedBox(height: 10),
                       itemBuilder: (context, index) {
                         final student = Map<String, dynamic>.from(
                           _students[index],
                         );
 
-                        return Card(
+                        final name = student['name'].toString();
+
+                        final initial = name.isEmpty
+                            ? '?'
+                            : name[0].toUpperCase();
+
+                        return AppPanel(
+                          padding: EdgeInsets.zero,
                           child: ListTile(
                             onTap: () {
                               context.push(
@@ -102,15 +155,39 @@ class _StudentsScreenState extends State<StudentsScreen> {
                                 '${student['id']}',
                               );
                             },
-                            leading: const CircleAvatar(
-                              child: Icon(Icons.person),
+                            minTileHeight: 76,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 15,
+                              vertical: 6,
                             ),
-                            title: Text(student['name'].toString()),
+                            leading: CircleAvatar(
+                              radius: 21,
+                              backgroundColor: AppColors.primarySoft,
+                              foregroundColor: AppColors.primary,
+                              child: Text(
+                                initial,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            title: Text(
+                              name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                             subtitle: Text(
-                              '${student['class_name']} • '
-                              'NIS ${student['nis']}',
+                              '${student['class_name']}  •  NIS ${student['nis']}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            trailing: const Icon(Icons.chevron_right),
+                            trailing: const Icon(
+                              Icons.chevron_right_rounded,
+                              color: AppColors.textMuted,
+                            ),
                           ),
                         );
                       },

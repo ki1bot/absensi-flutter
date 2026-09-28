@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../app/theme.dart';
+import '../../app/widgets.dart';
 import '../../core/api/api_client.dart';
 
 class StudentDetailScreen extends StatefulWidget {
@@ -20,6 +22,8 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
   Map<String, dynamic>? _student;
   String? _qrPayload;
 
+  bool _loadingQR = false;
+
   @override
   void initState() {
     super.initState();
@@ -35,25 +39,49 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
   }
 
   Future<void> _load() async {
-    final student = await _api.get('/api/v1/students/${widget.studentId}');
+    try {
+      final student = await _api.get('/api/v1/students/${widget.studentId}');
 
-    if (mounted) {
-      setState(() {
-        _student = Map<String, dynamic>.from(student);
-      });
+      if (mounted) {
+        setState(() {
+          _student = Map<String, dynamic>.from(student);
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.toString())));
+      }
     }
   }
 
   Future<void> _loadQR() async {
-    final result = await _api.get(
-      '/api/v1/students/'
-      '${widget.studentId}/qr',
-    );
+    setState(() {
+      _loadingQR = true;
+    });
 
-    if (mounted) {
-      setState(() {
-        _qrPayload = result['payload'].toString();
-      });
+    try {
+      final result = await _api.get(
+        '/api/v1/students/'
+        '${widget.studentId}/qr',
+      );
+
+      if (mounted) {
+        setState(() {
+          _qrPayload = result['payload'].toString();
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.toString())));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingQR = false;
+        });
+      }
     }
   }
 
@@ -66,47 +94,159 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
       body: student == null
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
               children: [
-                Text(
-                  student['name'].toString(),
-                  style: Theme.of(context).textTheme.headlineSmall
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                Text('NIS: ${student['nis']}'),
-                Text(
-                  'Kelas: '
-                  '${student['class_name']}',
-                ),
-                Text(
-                  'Orang Tua: '
-                  '${student['guardian_name']}',
-                ),
-                Text(
-                  'Email: '
-                  '${student['guardian_email']}',
-                ),
-                Text(
-                  'No. HP: '
-                  '${student['guardian_phone']}',
-                ),
-                const SizedBox(height: 24),
-                FilledButton.icon(
-                  onPressed: _loadQR,
-                  icon: const Icon(Icons.qr_code),
-                  label: const Text('Lihat QR'),
-                ),
-                if (_qrPayload != null) ...[
-                  const SizedBox(height: 24),
-                  Center(
-                    child: Container(
-                      color: Colors.white,
-                      padding: const EdgeInsets.all(18),
-                      child: QrImageView(data: _qrPayload!, size: 240),
-                    ),
+                AppPanel(
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundColor: AppColors.primarySoft,
+                        foregroundColor: AppColors.primary,
+                        child: Text(
+                          student['name'].toString().isEmpty
+                              ? '?'
+                              : student['name'].toString()[0].toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              student['name'].toString(),
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${student['class_name']}  •  NIS ${student['nis']}',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
+                const SizedBox(height: 26),
+                const SectionTitle(title: 'Informasi siswa'),
+                const SizedBox(height: 12),
+                AppPanel(
+                  child: Column(
+                    children: [
+                      AppInfoRow(
+                        label: 'NIS',
+                        value: student['nis'].toString(),
+                        icon: Icons.badge_outlined,
+                      ),
+                      const Divider(),
+                      AppInfoRow(
+                        label: 'Kelas',
+                        value: student['class_name'].toString(),
+                        icon: Icons.class_outlined,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 22),
+                const SectionTitle(title: 'Orang tua'),
+                const SizedBox(height: 12),
+                AppPanel(
+                  child: Column(
+                    children: [
+                      AppInfoRow(
+                        label: 'Nama',
+                        value: student['guardian_name'].toString(),
+                        icon: Icons.person_outline_rounded,
+                      ),
+                      const Divider(),
+                      AppInfoRow(
+                        label: 'Email',
+                        value: student['guardian_email'].toString(),
+                        icon: Icons.mail_outline,
+                      ),
+                      const Divider(),
+                      AppInfoRow(
+                        label: 'No. HP',
+                        value: student['guardian_phone'].toString(),
+                        icon: Icons.phone_outlined,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 22),
+                const SectionTitle(
+                  title: 'QR Absensi',
+                  subtitle: 'QR ini digunakan saat proses absensi siswa.',
+                ),
+                const SizedBox(height: 12),
+                AppPanel(
+                  child: Column(
+                    children: [
+                      if (_qrPayload == null)
+                        Column(
+                          children: [
+                            Container(
+                              width: 68,
+                              height: 68,
+                              decoration: BoxDecoration(
+                                color: AppColors.primarySoft,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Icon(
+                                Icons.qr_code_2,
+                                size: 38,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Tampilkan QR untuk kartu absensi siswa.',
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 18),
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton.icon(
+                                onPressed: _loadingQR ? null : _loadQR,
+                                icon: const Icon(Icons.qr_code_rounded),
+                                label: Text(
+                                  _loadingQR ? 'Memuat...' : 'Tampilkan QR',
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        Column(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(18),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: AppColors.border),
+                              ),
+                              child: QrImageView(data: _qrPayload!, size: 220),
+                            ),
+                            const SizedBox(height: 14),
+                            const Text(
+                              'QR hanya digunakan untuk proses absensi.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
               ],
             ),
     );

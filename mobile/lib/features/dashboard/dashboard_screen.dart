@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/theme.dart';
+import '../../app/widgets.dart';
 import '../../core/api/api_client.dart';
 import '../auth/auth_controller.dart';
 
@@ -35,19 +37,40 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Future<void> _load() async {
+    if (mounted) {
+      setState(() {
+        _loading = true;
+      });
+    }
+
     try {
       final result = await _api.get('/api/v1/dashboard');
 
       if (mounted) {
         setState(() {
           _stats = Map<String, dynamic>.from(result);
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..clearSnackBars()
+          ..showSnackBar(SnackBar(content: Text(error.toString())));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
           _loading = false;
         });
       }
-    } catch (_) {
-      if (mounted) {
-        setState(() => _loading = false);
-      }
+    }
+  }
+
+  Future<void> _logout() async {
+    await ref.read(authControllerProvider.notifier).logout();
+
+    if (mounted) {
+      context.go('/login');
     }
   }
 
@@ -57,35 +80,39 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        title: const Text('E-Absensi'),
         actions: [
           IconButton(
-            onPressed: () async {
-              await ref.read(authControllerProvider.notifier).logout();
-
-              if (context.mounted) {
-                context.go('/login');
-              }
-            },
-            icon: const Icon(Icons.logout),
+            tooltip: 'Keluar',
+            onPressed: _logout,
+            icon: const Icon(Icons.logout_rounded),
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
           children: [
             Text(
               'Halo, ${user?.name ?? 'Admin'}',
-              style: Theme.of(context).textTheme.headlineSmall
-                  ?.copyWith(fontWeight: FontWeight.w700),
+              style: Theme.of(context).textTheme.headlineSmall,
             ),
-            const SizedBox(height: 4),
-            const Text('Pantau kehadiran siswa hari ini.'),
-            const SizedBox(height: 24),
+            const SizedBox(height: 5),
+            const Text('Berikut ringkasan kehadiran siswa hari ini.'),
+            const SizedBox(height: 26),
+            const SectionTitle(
+              title: 'Ringkasan hari ini',
+              subtitle: 'Tarik halaman ke bawah untuk memperbarui data.',
+            ),
+            const SizedBox(height: 14),
             if (_loading)
-              const Center(child: CircularProgressIndicator())
+              const SizedBox(
+                height: 180,
+                child: Center(child: CircularProgressIndicator()),
+              )
             else
               GridView.count(
                 shrinkWrap: true,
@@ -93,48 +120,66 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 crossAxisCount: 2,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: 1.55,
+                childAspectRatio: 1.45,
                 children: [
                   _StatCard(
                     title: 'Total Siswa',
                     value: '${_stats?['total_students'] ?? 0}',
-                    icon: Icons.groups_outlined,
+                    icon: Icons.groups_2_outlined,
+                    color: AppColors.primary,
+                    backgroundColor: AppColors.primarySoft,
                   ),
                   _StatCard(
-                    title: 'Hadir Hari Ini',
+                    title: 'Hadir',
                     value: '${_stats?['present_today'] ?? 0}',
-                    icon: Icons.check_circle_outline,
+                    icon: Icons.check_circle_outline_rounded,
+                    color: AppColors.success,
+                    backgroundColor: AppColors.successSoft,
                   ),
                   _StatCard(
                     title: 'Terlambat',
                     value: '${_stats?['late_today'] ?? 0}',
-                    icon: Icons.schedule,
+                    icon: Icons.schedule_rounded,
+                    color: AppColors.warning,
+                    backgroundColor: AppColors.warningSoft,
                   ),
                   _StatCard(
                     title: 'Belum Hadir',
                     value: '${_stats?['not_present'] ?? 0}',
                     icon: Icons.person_off_outlined,
+                    color: AppColors.textSecondary,
+                    backgroundColor: AppColors.background,
                   ),
                 ],
               ),
-            const SizedBox(height: 24),
-            _MenuButton(
-              icon: Icons.people,
+            const SizedBox(height: 28),
+            const SectionTitle(
+              title: 'Menu utama',
+              subtitle: 'Kelola siswa dan proses absensi.',
+            ),
+            const SizedBox(height: 14),
+            _MenuTile(
+              icon: Icons.people_outline_rounded,
               title: 'Data Siswa',
+              subtitle: 'Lihat, cari, dan tambah data siswa',
               onTap: () {
                 context.push('/students');
               },
             ),
-            _MenuButton(
-              icon: Icons.qr_code_scanner,
+            const SizedBox(height: 10),
+            _MenuTile(
+              icon: Icons.qr_code_scanner_rounded,
               title: 'Scan Absensi',
+              subtitle: 'Pindai QR siswa saat datang',
               onTap: () {
                 context.push('/scanner');
               },
             ),
-            _MenuButton(
-              icon: Icons.history,
+            const SizedBox(height: 10),
+            _MenuTile(
+              icon: Icons.history_rounded,
               title: 'Riwayat Absensi',
+              subtitle: 'Lihat catatan kehadiran siswa',
               onTap: () {
                 context.push('/attendances');
               },
@@ -151,62 +196,92 @@ class _StatCard extends StatelessWidget {
     required this.title,
     required this.value,
     required this.icon,
+    required this.color,
+    required this.backgroundColor,
   });
 
   final String title;
   final String value;
   final IconData icon;
+  final Color color;
+  final Color backgroundColor;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Icon(icon, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    value,
-                    style: Theme.of(context).textTheme.headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  Text(title),
-                ],
-              ),
+    return AppPanel(
+      padding: const EdgeInsets.all(15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(10),
             ),
-          ],
-        ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: Theme.of(context).textTheme.headlineSmall
+                    ?.copyWith(fontSize: 24),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
 
-class _MenuButton extends StatelessWidget {
-  const _MenuButton({
+class _MenuTile extends StatelessWidget {
+  const _MenuTile({
     required this.icon,
     required this.title,
+    required this.subtitle,
     required this.onTap,
   });
 
   final IconData icon;
   final String title;
+  final String subtitle;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+    return AppPanel(
+      padding: EdgeInsets.zero,
       child: ListTile(
         onTap: onTap,
-        leading: Icon(icon),
-        title: Text(title),
-        trailing: const Icon(Icons.chevron_right),
+        minTileHeight: 76,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+        leading: Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: AppColors.primarySoft,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: AppColors.primary, size: 22),
+        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+        subtitle: Text(subtitle),
+        trailing: const Icon(
+          Icons.chevron_right_rounded,
+          color: AppColors.textMuted,
+        ),
       ),
     );
   }

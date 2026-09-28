@@ -11,7 +11,7 @@ void main() {
       const ProviderScope(child: MaterialApp(home: LoginScreen())),
     );
 
-    expect(find.text('E-Absensi Siswa'), findsOneWidget);
+    expect(find.text('Selamat datang'), findsOneWidget);
 
     expect(
       find.text('Masuk sebagai Admin, Operator, atau Orang Tua'),
