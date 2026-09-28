@@ -1,30 +1,40 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
+import 'package:absensi_flutter/main.dart';
+import 'package:absensi_flutter/services/health_api.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:absensi_flutter/main.dart';
+class FakeHealthService implements HealthService {
+  @override
+  Future<HealthStatus> getHealth() async {
+    return HealthStatus(
+      status: 'ok',
+      service: 'absensi-api',
+      database: 'connected',
+      time: DateTime.utc(2026, 9, 28, 10, 37, 57),
+    );
+  }
+
+  @override
+  void close() {}
+}
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('menampilkan status API dan database terhubung', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(AbsensiApp(healthService: FakeHealthService()));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpAndSettle();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    expect(find.text('Absensi Mobile App'), findsOneWidget);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Flutter → Go → PostgreSQL'), findsOneWidget);
+
+    expect(find.text('API terhubung'), findsOneWidget);
+
+    expect(find.text('ok'), findsOneWidget);
+
+    expect(find.text('absensi-api'), findsOneWidget);
+
+    expect(find.text('connected'), findsOneWidget);
   });
 }
