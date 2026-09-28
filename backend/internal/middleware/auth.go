@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/ki1bot/absensi-flutter/backend/internal/auth"
 	"github.com/ki1bot/absensi-flutter/backend/internal/httpx"
 )
 
@@ -16,6 +15,14 @@ type Identity struct {
 	UserID   int64
 	SchoolID int64
 	Role     string
+}
+
+type Claims struct {
+	UserID   int64  `json:"user_id"`
+	SchoolID int64  `json:"school_id"`
+	Role     string `json:"role"`
+
+	jwt.RegisteredClaims
 }
 
 func Authentication(secret []byte) func(http.Handler) http.Handler {
@@ -36,10 +43,22 @@ func Authentication(secret []byte) func(http.Handler) http.Handler {
 				}
 
 				rawToken := strings.TrimSpace(
-					strings.TrimPrefix(header, "Bearer "),
+					strings.TrimPrefix(
+						header,
+						"Bearer ",
+					),
 				)
 
-				claims := &auth.Claims{}
+				if rawToken == "" {
+					httpx.Error(
+						w,
+						http.StatusUnauthorized,
+						"token autentikasi diperlukan",
+					)
+					return
+				}
+
+				claims := &Claims{}
 
 				token, err := jwt.ParseWithClaims(
 					rawToken,
@@ -90,7 +109,9 @@ func RequireRoles(
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(
 			func(w http.ResponseWriter, r *http.Request) {
-				identity, ok := IdentityFromContext(r.Context())
+				identity, ok := IdentityFromContext(
+					r.Context(),
+				)
 
 				if !ok {
 					httpx.Error(
@@ -121,7 +142,9 @@ func RequireRoles(
 func IdentityFromContext(
 	ctx context.Context,
 ) (Identity, bool) {
-	value, ok := ctx.Value(identityKey{}).(Identity)
+	value, ok := ctx.Value(
+		identityKey{},
+	).(Identity)
 
 	return value, ok
 }
