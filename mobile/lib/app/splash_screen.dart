@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/auth/auth_controller.dart';
-import 'theme.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -54,39 +53,48 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: const Icon(
-                Icons.school_rounded,
-                color: Colors.white,
-                size: 34,
-              ),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 62,
+                  height: 62,
+                  decoration: BoxDecoration(
+                    color: scheme.primary,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: const Icon(
+                    Icons.school_rounded,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  'E-Absensi Siswa',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  'Pencatatan kehadiran sekolah',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 26),
+                const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2.2),
+                ),
+              ],
             ),
-            const SizedBox(height: 18),
-            Text(
-              'E-Absensi Siswa',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 22),
-            const SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.3,
-                color: AppColors.primary,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

@@ -63,21 +63,19 @@ class _ScannerScreenState extends State<ScannerScreen> {
         builder: (context) {
           return AlertDialog(
             icon: Container(
-              width: 58,
-              height: 58,
+              width: 56,
+              height: 56,
               decoration: BoxDecoration(
                 color: late ? AppColors.warningSoft : AppColors.successSoft,
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                late
-                    ? Icons.schedule_rounded
-                    : Icons.check_circle_outline_rounded,
+                late ? Icons.schedule_rounded : Icons.check_rounded,
                 color: late ? AppColors.warning : AppColors.success,
-                size: 30,
+                size: 28,
               ),
             ),
-            title: Text(late ? 'Absensi Tercatat' : 'Absensi Berhasil'),
+            title: Text(late ? 'Absensi tercatat' : 'Absensi berhasil'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -86,16 +84,20 @@ class _ScannerScreenState extends State<ScannerScreen> {
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
-                const SizedBox(height: 4),
-                Text('Kelas ${student['class']}', textAlign: TextAlign.center),
-                const SizedBox(height: 14),
+                const SizedBox(height: 3),
                 Text(
-                  'Pukul ${result['time']}',
+                  'Kelas ${student['class']}',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  result['time'].toString(),
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  late ? 'Status: Terlambat' : 'Status: Hadir',
+                  late ? 'Terlambat' : 'Hadir',
                   style: TextStyle(
                     color: late ? AppColors.warning : AppColors.success,
                     fontWeight: FontWeight.w600,
@@ -129,7 +131,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
             icon: const Icon(
               Icons.error_outline_rounded,
               color: AppColors.danger,
-              size: 42,
+              size: 40,
             ),
             title: const Text('Absensi gagal'),
             content: Text(error.toString(), textAlign: TextAlign.center),
@@ -189,83 +191,95 @@ class _ScannerScreenState extends State<ScannerScreen> {
         fit: StackFit.expand,
         children: [
           MobileScanner(controller: _controller, onDetect: _process),
-          Container(color: Colors.black.withAlpha(24)),
+          Container(color: Colors.black.withAlpha(36)),
           SafeArea(
-            child: Column(
-              children: [
-                const SizedBox(height: 28),
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 24),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 11,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withAlpha(155),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: const Text(
-                    'Arahkan kamera ke QR siswa',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 11,
                     ),
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  width: 255,
-                  height: 255,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: Colors.white, width: 3),
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  margin: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withAlpha(170),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.info_outline,
-                        color: Colors.white70,
-                        size: 21,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          _processing
-                              ? 'Memproses absensi...'
-                              : 'Pastikan QR terlihat jelas di dalam kotak.',
-                          style: const TextStyle(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withAlpha(170),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.qr_code_scanner_rounded,
+                          color: Colors.white,
+                          size: 19,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Arahkan QR ke area pemindaian',
+                          style: TextStyle(
                             color: Colors.white,
-                            height: 1.4,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                      ),
-                      if (_processing)
-                        const Padding(
-                          padding: EdgeInsets.only(left: 12),
-                          child: SizedBox(
-                            width: 19,
-                            height: 19,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    width: 250,
+                    height: 250,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.white, width: 2.5),
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(15),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withAlpha(185),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _processing
+                              ? Icons.hourglass_top_rounded
+                              : Icons.info_outline_rounded,
+                          color: Colors.white70,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 11),
+                        Expanded(
+                          child: Text(
+                            _processing ? 'Memproses absensi siswa...' : 'Pastikan QR terlihat jelas dan berada di dalam kotak.',
+                            style: const TextStyle(
                               color: Colors.white,
+                              fontSize: 13,
+                              height: 1.4,
                             ),
                           ),
                         ),
-                    ],
+                        if (_processing)
+                          const Padding(
+                            padding: EdgeInsets.only(left: 10),
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

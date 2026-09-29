@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/theme.dart';
 import '../../app/theme_controller.dart';
 import '../../app/widgets.dart';
 import '../../core/api/api_client.dart';
@@ -18,17 +19,13 @@ class AdminProfileScreen extends ConsumerStatefulWidget {
 
 class _AdminProfileScreenState extends ConsumerState<AdminProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-
   final _api = ApiClient();
 
   final _nameController = TextEditingController();
-
   final _emailController = TextEditingController();
-
   final _passwordController = TextEditingController();
 
   bool _loading = false;
-
   bool _obscure = true;
 
   @override
@@ -38,7 +35,6 @@ class _AdminProfileScreenState extends ConsumerState<AdminProfileScreen> {
     final user = ref.read(authControllerProvider).user;
 
     _nameController.text = user?.name ?? '';
-
     _emailController.text = user?.email ?? '';
   }
 
@@ -120,8 +116,10 @@ class _AdminProfileScreenState extends ConsumerState<AdminProfileScreen> {
     ref.watch(themeControllerProvider);
 
     final dark = Theme.of(context).brightness == Brightness.dark;
-
     final scheme = Theme.of(context).colorScheme;
+
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profil Admin')),
@@ -131,49 +129,49 @@ class _AdminProfileScreenState extends ConsumerState<AdminProfileScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
             children: [
-              AppPanel(
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundColor: scheme.primaryContainer,
-                      foregroundColor: scheme.onPrimaryContainer,
-                      child: Text(
-                        _nameController.text.trim().isEmpty
-                            ? 'A'
-                            : _nameController.text.trim()[0].toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 31,
+                    backgroundColor: scheme.primaryContainer,
+                    foregroundColor: scheme.onPrimaryContainer,
+                    child: Text(
+                      name.isEmpty ? 'A' : name[0].toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 21,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 15),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name.isEmpty ? 'Admin' : name,
+                          style: Theme.of(context).textTheme.titleLarge,
                         ),
-                      ),
+                        const SizedBox(height: 3),
+                        Text(
+                          email,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 5),
+                        const StatusBadge(
+                          label: 'Administrator',
+                          foregroundColor: AppColors.primary,
+                          backgroundColor: AppColors.primarySoft,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _nameController.text.trim().isEmpty
-                                ? 'Admin'
-                                : _nameController.text.trim(),
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _emailController.text.trim(),
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 30),
               const SectionTitle(
-                title: 'Data akun',
-                subtitle: 'Kelola nama, email login, dan password.',
+                title: 'Informasi akun',
+                subtitle: 'Perubahan tersimpan langsung ke akun admin',
               ),
               const SizedBox(height: 12),
               AppPanel(
@@ -228,7 +226,7 @@ class _AdminProfileScreenState extends ConsumerState<AdminProfileScreen> {
                       textInputAction: TextInputAction.done,
                       decoration: InputDecoration(
                         labelText: 'Password Baru',
-                        helperText: 'Kosongkan jika password tidak diubah.',
+                        helperText: 'Kosongkan apabila password tidak diubah.',
                         prefixIcon: const Icon(Icons.lock_outline_rounded),
                         suffixIcon: IconButton(
                           onPressed: () {
@@ -274,34 +272,47 @@ class _AdminProfileScreenState extends ConsumerState<AdminProfileScreen> {
                 ),
               ),
               const SizedBox(height: 28),
-              const SectionTitle(
-                title: 'Tampilan',
-                subtitle: 'Atur tampilan aplikasi.',
-              ),
+              const SectionTitle(title: 'Preferensi'),
               const SizedBox(height: 12),
               AppPanel(
                 padding: EdgeInsets.zero,
                 child: SwitchListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
                   value: dark,
                   onChanged: (value) {
                     ref.read(themeControllerProvider.notifier).setDark(value);
                   },
-                  secondary: Icon(
-                    dark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+                  secondary: AppIconBox(
+                    icon: dark
+                        ? Icons.dark_mode_outlined
+                        : Icons.light_mode_outlined,
+                    backgroundColor: scheme.surfaceContainer,
+                    foregroundColor: scheme.onSurfaceVariant,
                   ),
-                  title: const Text('Tema Gelap'),
+                  title: const Text(
+                    'Tema gelap',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   subtitle: Text(
                     dark
-                        ? 'Tema gelap sedang digunakan.'
-                        : 'Tema terang sedang digunakan.',
+                        ? 'Tema gelap sedang digunakan'
+                        : 'Tema terang sedang digunakan',
                   ),
                 ),
               ),
               const SizedBox(height: 28),
+              const SectionTitle(title: 'Sesi akun'),
+              const SizedBox(height: 12),
               OutlinedButton.icon(
                 onPressed: _logout,
-                icon: const Icon(Icons.logout_rounded),
-                label: const Text('Keluar dari Akun'),
+                icon: const Icon(Icons.logout_rounded, color: AppColors.danger),
+                label: const Text(
+                  'Keluar dari Akun',
+                  style: TextStyle(color: AppColors.danger),
+                ),
               ),
             ],
           ),

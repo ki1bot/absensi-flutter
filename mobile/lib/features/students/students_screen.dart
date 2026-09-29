@@ -15,11 +15,9 @@ class StudentsScreen extends StatefulWidget {
 
 class _StudentsScreenState extends State<StudentsScreen> {
   final _api = ApiClient();
-
   final _searchController = TextEditingController();
 
   List<dynamic> _students = [];
-
   bool _loading = true;
 
   @override
@@ -94,16 +92,21 @@ class _StudentsScreenState extends State<StudentsScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openCreate,
         icon: const Icon(Icons.add_rounded),
-        label: const Text('Tambah Siswa'),
+        label: const Text('Tambah'),
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
             child: TextField(
               controller: _searchController,
               textInputAction: TextInputAction.search,
-              onSubmitted: (_) => _load(),
+              onSubmitted: (_) {
+                _load();
+              },
+              onChanged: (_) {
+                setState(() {});
+              },
               decoration: InputDecoration(
                 hintText: 'Cari nama, NIS, atau kelas',
                 prefixIcon: const Icon(Icons.search_rounded),
@@ -120,27 +123,35 @@ class _StudentsScreenState extends State<StudentsScreen> {
                         icon: const Icon(Icons.close_rounded),
                       ),
               ),
-              onChanged: (_) {
-                setState(() {});
-              },
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: SectionTitle(
-              title: 'Daftar siswa',
-              subtitle: '${_students.length} siswa ditemukan',
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _searchController.text.trim().isEmpty
+                        ? 'Semua siswa'
+                        : 'Hasil pencarian',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                Text(
+                  '${_students.length} data',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 12),
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _students.isEmpty
                 ? const EmptyState(
-                    icon: Icons.person_search_outlined,
-                    title: 'Belum ada siswa',
-                    message: 'Tambahkan siswa baru atau ubah kata pencarian.',
+                    icon: Icons.people_outline_rounded,
+                    title: 'Data siswa belum ada',
+                    message: 'Tambahkan siswa baru atau coba kata pencarian lainnya.',
                   )
                 : RefreshIndicator(
                     onRefresh: _load,
@@ -148,7 +159,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
                       itemCount: _students.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 10),
+                      separatorBuilder: (_, _) => const SizedBox(height: 9),
                       itemBuilder: (context, index) {
                         final student = Map<String, dynamic>.from(
                           _students[index],
@@ -166,10 +177,10 @@ class _StudentsScreenState extends State<StudentsScreen> {
                             onTap: () {
                               _openStudent(student['id'] as int);
                             },
-                            minTileHeight: 76,
+                            minTileHeight: 74,
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 15,
-                              vertical: 6,
+                              vertical: 5,
                             ),
                             leading: CircleAvatar(
                               radius: 21,
@@ -190,10 +201,13 @@ class _StudentsScreenState extends State<StudentsScreen> {
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            subtitle: Text(
-                              '${student['class_name']}  •  NIS ${student['nis']}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            subtitle: Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                '${student['class_name']} · NIS ${student['nis']}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                             trailing: Icon(
                               Icons.chevron_right_rounded,

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app/theme.dart';
 import '../../app/widgets.dart';
 import '../../core/api/api_client.dart';
 
@@ -28,6 +27,7 @@ class _RegisterSchoolScreenState extends State<RegisterSchoolScreen> {
   @override
   void dispose() {
     _api.close();
+
     _schoolController.dispose();
     _adminController.dispose();
     _emailController.dispose();
@@ -70,38 +70,45 @@ class _RegisterSchoolScreenState extends State<RegisterSchoolScreen> {
         barrierDismissible: false,
         builder: (context) {
           return AlertDialog(
-            title: const Text('Sekolah berhasil didaftarkan'),
+            title: const Text('Pendaftaran berhasil'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Akun admin sudah dibuat. Simpan data berikut sebelum melanjutkan.',
+                  'Akun admin sudah dibuat. Simpan informasi login berikut.',
                 ),
                 const SizedBox(height: 18),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: SelectableText(
-                    'Email\n'
-                    '${map['admin_email']}\n\n'
-                    'Password awal\n'
-                    '${map['initial_password']}',
-                    style: const TextStyle(height: 1.5),
+                AppPanel(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Email',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 3),
+                      SelectableText(
+                        map['admin_email'].toString(),
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Password awal',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 3),
+                      SelectableText(
+                        map['initial_password'].toString(),
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   'Password awal hanya ditampilkan pada tahap ini.',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
             ),
@@ -145,6 +152,8 @@ class _RegisterSchoolScreenState extends State<RegisterSchoolScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -166,112 +175,99 @@ class _RegisterSchoolScreenState extends State<RegisterSchoolScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      'Mulai menggunakan E-Absensi',
-                      style: Theme.of(context).textTheme.headlineSmall,
+                    const PageIntro(
+                      title: 'Informasi sekolah',
+                      subtitle: 'Isi data sekolah dan admin utama untuk mulai menggunakan aplikasi.',
                     ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Isi informasi dasar sekolah. Akun admin akan dibuat secara otomatis.',
-                    ),
-                    const SizedBox(height: 24),
-                    AppPanel(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const SectionTitle(title: 'Informasi sekolah'),
-                          const SizedBox(height: 18),
-                          TextFormField(
-                            controller: _schoolController,
-                            textInputAction: TextInputAction.next,
-                            decoration: const InputDecoration(
-                              labelText: 'Nama Sekolah',
-                              prefixIcon: Icon(Icons.apartment_rounded),
-                            ),
-                            validator: _requiredValidator,
-                          ),
-                          const SizedBox(height: 14),
-                          TextFormField(
-                            controller: _adminController,
-                            textInputAction: TextInputAction.next,
-                            decoration: const InputDecoration(
-                              labelText: 'Nama Admin',
-                              prefixIcon: Icon(Icons.person_outline_rounded),
-                            ),
-                            validator: _requiredValidator,
-                          ),
-                          const SizedBox(height: 14),
-                          TextFormField(
-                            controller: _entryController,
-                            textInputAction: TextInputAction.next,
-                            keyboardType: TextInputType.datetime,
-                            decoration: const InputDecoration(
-                              labelText: 'Jam Masuk',
-                              hintText: '07:00',
-                              prefixIcon: Icon(Icons.schedule_rounded),
-                            ),
-                            validator: (value) {
-                              final required = _requiredValidator(value);
-
-                              if (required != null) {
-                                return required;
-                              }
-
-                              final pattern = RegExp(r'^\d{2}:\d{2}$');
-
-                              if (!pattern.hasMatch(value!.trim())) {
-                                return 'Gunakan format HH:mm';
-                              }
-
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 14),
-                          TextFormField(
-                            controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
-                            textInputAction: TextInputAction.done,
-                            decoration: const InputDecoration(
-                              labelText: 'Email Admin',
-                              prefixIcon: Icon(Icons.mail_outline_rounded),
-                            ),
-                            validator: (value) {
-                              final required = _requiredValidator(value);
-
-                              if (required != null) {
-                                return required;
-                              }
-
-                              if (!value!.contains('@')) {
-                                return 'Format email tidak valid';
-                              }
-
-                              return null;
-                            },
-                          ),
-                        ],
+                    const SizedBox(height: 26),
+                    TextFormField(
+                      controller: _schoolController,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Nama Sekolah',
+                        prefixIcon: Icon(Icons.apartment_rounded),
                       ),
+                      validator: _requiredValidator,
                     ),
                     const SizedBox(height: 14),
-                    const AppPanel(
-                      padding: EdgeInsets.all(16),
+                    TextFormField(
+                      controller: _adminController,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Nama Admin',
+                        prefixIcon: Icon(Icons.person_outline_rounded),
+                      ),
+                      validator: _requiredValidator,
+                    ),
+                    const SizedBox(height: 14),
+                    TextFormField(
+                      controller: _entryController,
+                      keyboardType: TextInputType.datetime,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Jam Masuk',
+                        hintText: '07:00',
+                        prefixIcon: Icon(Icons.schedule_rounded),
+                      ),
+                      validator: (value) {
+                        final required = _requiredValidator(value);
+
+                        if (required != null) {
+                          return required;
+                        }
+
+                        final pattern = RegExp(r'^\d{2}:\d{2}$');
+
+                        if (!pattern.hasMatch(value!.trim())) {
+                          return 'Gunakan format HH:mm';
+                        }
+
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.done,
+                      decoration: const InputDecoration(
+                        labelText: 'Email Admin',
+                        prefixIcon: Icon(Icons.mail_outline_rounded),
+                      ),
+                      validator: (value) {
+                        final required = _requiredValidator(value);
+
+                        if (required != null) {
+                          return required;
+                        }
+
+                        if (!value!.contains('@')) {
+                          return 'Format email tidak valid';
+                        }
+
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 18),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainer,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Icon(
                             Icons.info_outline_rounded,
-                            color: AppColors.primary,
-                            size: 21,
+                            size: 20,
+                            color: scheme.onSurfaceVariant,
                           ),
-                          SizedBox(width: 12),
+                          const SizedBox(width: 11),
                           Expanded(
                             child: Text(
-                              'Sekolah mendapatkan masa uji coba 7 hari setelah pendaftaran berhasil.',
-                              style: TextStyle(
-                                color: AppColors.textSecondary,
-                                height: 1.45,
-                              ),
+                              'Sekolah mendapatkan masa uji coba 7 hari setelah pendaftaran.',
+                              style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ),
                         ],
@@ -282,10 +278,10 @@ class _RegisterSchoolScreenState extends State<RegisterSchoolScreen> {
                       onPressed: _loading ? null : _submit,
                       child: _loading
                           ? const SizedBox(
-                              width: 21,
-                              height: 21,
+                              width: 20,
+                              height: 20,
                               child: CircularProgressIndicator(
-                                strokeWidth: 2.2,
+                                strokeWidth: 2,
                                 color: Colors.white,
                               ),
                             )

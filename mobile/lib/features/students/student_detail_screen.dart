@@ -20,7 +20,6 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
   final _api = ApiClient();
 
   Map<String, dynamic>? _student;
-
   String? _qrPayload;
 
   bool _loadingQR = false;
@@ -101,7 +100,6 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final student = _student;
-
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -113,7 +111,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
             onPressed: student == null ? null : _openEdit,
             icon: const Icon(Icons.edit_outlined),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
         ],
       ),
       body: student == null
@@ -121,44 +119,42 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
           : ListView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
               children: [
-                AppPanel(
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 30,
-                        backgroundColor: scheme.primaryContainer,
-                        foregroundColor: scheme.onPrimaryContainer,
-                        child: Text(
-                          student['name'].toString().isEmpty
-                              ? '?'
-                              : student['name'].toString()[0].toUpperCase(),
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: scheme.primaryContainer,
+                      foregroundColor: scheme.onPrimaryContainer,
+                      child: Text(
+                        student['name'].toString().isEmpty
+                            ? '?'
+                            : student['name'].toString()[0].toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 21,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            student['name'].toString(),
+                            style: Theme.of(context).textTheme.titleLarge,
                           ),
-                        ),
+                          const SizedBox(height: 3),
+                          Text(
+                            '${student['class_name']} · NIS ${student['nis']}',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              student['name'].toString(),
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${student['class_name']}  •  NIS ${student['nis']}',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 26),
+                const SizedBox(height: 30),
                 const SectionTitle(title: 'Informasi siswa'),
                 const SizedBox(height: 12),
                 AppPanel(
@@ -178,7 +174,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: 24),
                 const SectionTitle(title: 'Orang tua'),
                 const SizedBox(height: 12),
                 AppPanel(
@@ -204,34 +200,31 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: 24),
                 const SectionTitle(
                   title: 'QR Absensi',
-                  subtitle: 'Gunakan QR ini saat proses absensi siswa.',
+                  subtitle: 'Digunakan saat siswa melakukan absensi',
                 ),
                 const SizedBox(height: 12),
                 AppPanel(
-                  child: Column(
-                    children: [
-                      if (_qrPayload == null)
-                        Column(
+                  child: _qrPayload == null
+                      ? Column(
                           children: [
-                            Container(
-                              width: 68,
-                              height: 68,
-                              decoration: BoxDecoration(
-                                color: scheme.primaryContainer,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Icon(
-                                Icons.qr_code_2_rounded,
-                                size: 38,
-                                color: scheme.onPrimaryContainer,
-                              ),
+                            AppIconBox(
+                              icon: Icons.qr_code_2_rounded,
+                              size: 60,
+                              iconSize: 32,
+                              backgroundColor: scheme.surfaceContainer,
+                              foregroundColor: scheme.onSurfaceVariant,
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 14),
                             Text(
-                              'Tampilkan QR untuk kartu absensi siswa.',
+                              'QR siswa belum ditampilkan',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Tampilkan QR apabila ingin mencetak atau menggunakannya untuk absensi.',
                               textAlign: TextAlign.center,
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
@@ -248,8 +241,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                             ),
                           ],
                         )
-                      else
-                        Column(
+                      : Column(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(18),
@@ -262,16 +254,14 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                               ),
                               child: QrImageView(data: _qrPayload!, size: 220),
                             ),
-                            const SizedBox(height: 14),
+                            const SizedBox(height: 12),
                             Text(
-                              'QR hanya digunakan untuk proses absensi.',
+                              'QR ini hanya digunakan untuk proses absensi.',
                               textAlign: TextAlign.center,
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
                         ),
-                    ],
-                  ),
                 ),
               ],
             ),

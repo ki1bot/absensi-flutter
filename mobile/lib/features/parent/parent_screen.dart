@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/theme.dart';
+import '../../app/theme_controller.dart';
 import '../../app/widgets.dart';
 import '../../core/api/api_client.dart';
 import '../auth/auth_controller.dart';
@@ -53,7 +54,6 @@ class _ParentScreenState extends ConsumerState<ParentScreen> {
       if (mounted) {
         setState(() {
           _children = dashboard['children'] as List<dynamic>;
-
           _notifications = notifications as List<dynamic>;
         });
       }
@@ -83,16 +83,30 @@ class _ParentScreenState extends ConsumerState<ParentScreen> {
   Widget build(BuildContext context) {
     final user = ref.watch(authControllerProvider).user;
 
+    ref.watch(themeControllerProvider);
+
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('E-Absensi'),
+        title: const Text('Beranda'),
         actions: [
+          IconButton(
+            tooltip: dark ? 'Tema terang' : 'Tema gelap',
+            onPressed: () {
+              ref.read(themeControllerProvider.notifier).setDark(!dark);
+            },
+            icon: Icon(
+              dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+            ),
+          ),
           IconButton(
             tooltip: 'Keluar',
             onPressed: _logout,
             icon: const Icon(Icons.logout_rounded),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
         ],
       ),
       body: _loading
@@ -104,42 +118,52 @@ class _ParentScreenState extends ConsumerState<ParentScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
                 children: [
                   Text(
-                    'Halo, ${user?.name ?? ''}',
+                    'Halo, ${user?.name ?? 'Orang Tua'}',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
-                  const SizedBox(height: 5),
-                  const Text('Pantau status kehadiran anak Anda hari ini.'),
-                  const SizedBox(height: 26),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Pantau informasi kehadiran anak dari sini.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 28),
                   const SectionTitle(title: 'Kehadiran hari ini'),
                   const SizedBox(height: 12),
                   if (_children.isEmpty)
-                    const AppPanel(
-                      child: Text(
-                        'Belum ada data siswa yang terhubung dengan akun ini.',
-                      ),
+                    const EmptyState(
+                      icon: Icons.person_outline_rounded,
+                      title: 'Belum ada siswa',
+                      message: 'Belum ada data siswa yang terhubung dengan akun ini.',
                     )
                   else
                     ..._children.map((value) {
                       final child = Map<String, dynamic>.from(value);
 
                       final status = child['status'].toString();
-
                       final late = status == 'late';
-
                       final present = status.isNotEmpty;
 
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.only(bottom: 9),
                         child: AppPanel(
                           child: Row(
                             children: [
                               CircleAvatar(
-                                radius: 24,
-                                backgroundColor: AppColors.primarySoft,
-                                foregroundColor: AppColors.primary,
-                                child: const Icon(Icons.person_rounded),
+                                radius: 23,
+                                backgroundColor: scheme.primaryContainer,
+                                foregroundColor: scheme.onPrimaryContainer,
+                                child: Text(
+                                  child['name'].toString().isEmpty
+                                      ? '?'
+                                      : child['name']
+                                            .toString()[0]
+                                            .toUpperCase(),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                               ),
-                              const SizedBox(width: 14),
+                              const SizedBox(width: 13),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,21 +174,26 @@ class _ParentScreenState extends ConsumerState<ParentScreen> {
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
-                                    const SizedBox(height: 3),
-                                    Text('Kelas ${child['class_name']}'),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Kelas ${child['class_name']}',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium,
+                                    ),
                                     if (present) ...[
-                                      const SizedBox(height: 4),
+                                      const SizedBox(height: 3),
                                       Text(
-                                        'Pukul ${child['time']}',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: AppColors.textMuted,
-                                        ),
+                                        'Tercatat pukul ${child['time']}',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
                                       ),
                                     ],
                                   ],
                                 ),
                               ),
+                              const SizedBox(width: 8),
                               StatusBadge(
                                 label: !present
                                     ? 'Belum Hadir'
@@ -172,12 +201,12 @@ class _ParentScreenState extends ConsumerState<ParentScreen> {
                                     ? 'Terlambat'
                                     : 'Hadir',
                                 foregroundColor: !present
-                                    ? AppColors.textSecondary
+                                    ? scheme.onSurfaceVariant
                                     : late
                                     ? AppColors.warning
                                     : AppColors.success,
                                 backgroundColor: !present
-                                    ? AppColors.background
+                                    ? scheme.surfaceContainer
                                     : late
                                     ? AppColors.warningSoft
                                     : AppColors.successSoft,
@@ -187,40 +216,32 @@ class _ParentScreenState extends ConsumerState<ParentScreen> {
                         ),
                       );
                     }),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 26),
                   SectionTitle(
-                    title: 'Notifikasi',
-                    subtitle: '${_notifications.length} pemberitahuan',
+                    title: 'Pemberitahuan',
+                    subtitle: '${_notifications.length} notifikasi',
                   ),
                   const SizedBox(height: 12),
                   if (_notifications.isEmpty)
-                    const AppPanel(child: Text('Belum ada notifikasi baru.'))
+                    const AppPanel(child: Text('Belum ada pemberitahuan baru.'))
                   else
                     ..._notifications.map((value) {
                       final notification = Map<String, dynamic>.from(value);
 
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.only(bottom: 9),
                         child: AppPanel(
                           padding: EdgeInsets.zero,
                           child: ListTile(
-                            minTileHeight: 72,
+                            minTileHeight: 74,
                             contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 6,
+                              horizontal: 15,
+                              vertical: 5,
                             ),
-                            leading: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: AppColors.primarySoft,
-                                borderRadius: BorderRadius.circular(11),
-                              ),
-                              child: const Icon(
-                                Icons.notifications_none_rounded,
-                                color: AppColors.primary,
-                                size: 21,
-                              ),
+                            leading: AppIconBox(
+                              icon: Icons.notifications_none_rounded,
+                              backgroundColor: scheme.surfaceContainer,
+                              foregroundColor: scheme.onSurfaceVariant,
                             ),
                             title: Text(
                               notification['title'].toString(),
@@ -228,7 +249,10 @@ class _ParentScreenState extends ConsumerState<ParentScreen> {
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            subtitle: Text(notification['body'].toString()),
+                            subtitle: Padding(
+                              padding: const EdgeInsets.only(top: 3),
+                              child: Text(notification['body'].toString()),
+                            ),
                           ),
                         ),
                       );

@@ -16,23 +16,17 @@ class EditStudentScreen extends StatefulWidget {
 
 class _EditStudentScreenState extends State<EditStudentScreen> {
   final _formKey = GlobalKey<FormState>();
-
   final _api = ApiClient();
 
   final _nis = TextEditingController();
-
   final _name = TextEditingController();
-
   final _className = TextEditingController();
 
   final _guardianName = TextEditingController();
-
   final _guardianEmail = TextEditingController();
-
   final _guardianPhone = TextEditingController();
 
   bool _loading = true;
-
   bool _saving = false;
 
   @override
@@ -45,9 +39,11 @@ class _EditStudentScreenState extends State<EditStudentScreen> {
   @override
   void dispose() {
     _api.close();
+
     _nis.dispose();
     _name.dispose();
     _className.dispose();
+
     _guardianName.dispose();
     _guardianEmail.dispose();
     _guardianPhone.dispose();
@@ -62,15 +58,11 @@ class _EditStudentScreenState extends State<EditStudentScreen> {
       final student = Map<String, dynamic>.from(result);
 
       _nis.text = student['nis'].toString();
-
       _name.text = student['name'].toString();
-
       _className.text = student['class_name'].toString();
 
       _guardianName.text = student['guardian_name'].toString();
-
       _guardianEmail.text = student['guardian_email'].toString();
-
       _guardianPhone.text = student['guardian_phone'].toString();
     } catch (error) {
       if (mounted) {
@@ -125,11 +117,15 @@ class _EditStudentScreenState extends State<EditStudentScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Simpan password awal berikut.'),
-                  const SizedBox(height: 16),
-                  SelectableText(
-                    initialPassword,
-                    style: Theme.of(context).textTheme.titleLarge,
+                  const Text(
+                    'Simpan password awal berikut untuk login akun orang tua.',
+                  ),
+                  const SizedBox(height: 18),
+                  AppPanel(
+                    child: SelectableText(
+                      initialPassword,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
                   ),
                 ],
               ),
@@ -164,39 +160,12 @@ class _EditStudentScreenState extends State<EditStudentScreen> {
     }
   }
 
-  Widget _field({
-    required TextEditingController controller,
-    required String label,
-    IconData? icon,
-    bool required = false,
-    TextInputType? keyboardType,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: keyboardType,
-        textInputAction: TextInputAction.next,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: icon == null ? null : Icon(icon),
-        ),
-        validator: (value) {
-          if (required && (value == null || value.trim().isEmpty)) {
-            return '$label wajib diisi';
-          }
+  String? _required(String label, String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return '$label wajib diisi';
+    }
 
-          if (label == 'Email Orang Tua' &&
-              value != null &&
-              value.trim().isNotEmpty &&
-              !value.contains('@')) {
-            return 'Format email tidak valid';
-          }
-
-          return null;
-        },
-      ),
-    );
+    return null;
   }
 
   @override
@@ -210,31 +179,50 @@ class _EditStudentScreenState extends State<EditStudentScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
                 children: [
-                  const SectionTitle(
-                    title: 'Data siswa',
-                    subtitle: 'Perbarui informasi utama siswa.',
+                  const PageIntro(
+                    title: 'Perbarui data siswa',
+                    subtitle: 'Pastikan informasi yang diubah sudah sesuai sebelum disimpan.',
                   ),
+                  const SizedBox(height: 28),
+                  const SectionTitle(title: 'Informasi siswa'),
                   const SizedBox(height: 12),
                   AppPanel(
                     child: Column(
                       children: [
-                        _field(
+                        TextFormField(
                           controller: _nis,
-                          label: 'NIS',
-                          icon: Icons.badge_outlined,
-                          required: true,
+                          textInputAction: TextInputAction.next,
+                          decoration: const InputDecoration(
+                            labelText: 'NIS',
+                            prefixIcon: Icon(Icons.badge_outlined),
+                          ),
+                          validator: (value) {
+                            return _required('NIS', value);
+                          },
                         ),
-                        _field(
+                        const SizedBox(height: 14),
+                        TextFormField(
                           controller: _name,
-                          label: 'Nama Siswa',
-                          icon: Icons.person_outline_rounded,
-                          required: true,
+                          textInputAction: TextInputAction.next,
+                          decoration: const InputDecoration(
+                            labelText: 'Nama Siswa',
+                            prefixIcon: Icon(Icons.person_outline_rounded),
+                          ),
+                          validator: (value) {
+                            return _required('Nama Siswa', value);
+                          },
                         ),
-                        _field(
+                        const SizedBox(height: 14),
+                        TextFormField(
                           controller: _className,
-                          label: 'Kelas',
-                          icon: Icons.class_outlined,
-                          required: true,
+                          textInputAction: TextInputAction.next,
+                          decoration: const InputDecoration(
+                            labelText: 'Kelas',
+                            prefixIcon: Icon(Icons.class_outlined),
+                          ),
+                          validator: (value) {
+                            return _required('Kelas', value);
+                          },
                         ),
                       ],
                     ),
@@ -242,28 +230,48 @@ class _EditStudentScreenState extends State<EditStudentScreen> {
                   const SizedBox(height: 26),
                   const SectionTitle(
                     title: 'Data orang tua',
-                    subtitle: 'Kosongkan email jika tidak menggunakan akun orang tua.',
+                    subtitle: 'Kosongkan email apabila siswa tidak menggunakan akun orang tua',
                   ),
                   const SizedBox(height: 12),
                   AppPanel(
                     child: Column(
                       children: [
-                        _field(
+                        TextFormField(
                           controller: _guardianName,
-                          label: 'Nama Orang Tua',
-                          icon: Icons.supervisor_account_outlined,
+                          textInputAction: TextInputAction.next,
+                          decoration: const InputDecoration(
+                            labelText: 'Nama Orang Tua',
+                            prefixIcon: Icon(Icons.supervisor_account_outlined),
+                          ),
                         ),
-                        _field(
+                        const SizedBox(height: 14),
+                        TextFormField(
                           controller: _guardianEmail,
-                          label: 'Email Orang Tua',
                           keyboardType: TextInputType.emailAddress,
-                          icon: Icons.mail_outline_rounded,
+                          textInputAction: TextInputAction.next,
+                          decoration: const InputDecoration(
+                            labelText: 'Email Orang Tua',
+                            prefixIcon: Icon(Icons.mail_outline_rounded),
+                          ),
+                          validator: (value) {
+                            if (value != null &&
+                                value.trim().isNotEmpty &&
+                                !value.contains('@')) {
+                              return 'Format email tidak valid';
+                            }
+
+                            return null;
+                          },
                         ),
-                        _field(
+                        const SizedBox(height: 14),
+                        TextFormField(
                           controller: _guardianPhone,
-                          label: 'No. HP Orang Tua',
                           keyboardType: TextInputType.phone,
-                          icon: Icons.phone_outlined,
+                          textInputAction: TextInputAction.done,
+                          decoration: const InputDecoration(
+                            labelText: 'No. HP Orang Tua',
+                            prefixIcon: Icon(Icons.phone_outlined),
+                          ),
                         ),
                       ],
                     ),

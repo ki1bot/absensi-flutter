@@ -19,6 +19,7 @@ class _CreateStudentScreenState extends State<CreateStudentScreen> {
   final _nis = TextEditingController();
   final _name = TextEditingController();
   final _className = TextEditingController();
+
   final _guardianName = TextEditingController();
   final _guardianEmail = TextEditingController();
   final _guardianPhone = TextEditingController();
@@ -28,9 +29,11 @@ class _CreateStudentScreenState extends State<CreateStudentScreen> {
   @override
   void dispose() {
     _api.close();
+
     _nis.dispose();
     _name.dispose();
     _className.dispose();
+
     _guardianName.dispose();
     _guardianEmail.dispose();
     _guardianPhone.dispose();
@@ -82,12 +85,14 @@ class _CreateStudentScreenState extends State<CreateStudentScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Simpan password awal berikut sebelum menutup halaman.',
+                    'Simpan password awal berikut. Password ini diperlukan untuk login pertama.',
                   ),
-                  const SizedBox(height: 16),
-                  SelectableText(
-                    password,
-                    style: Theme.of(context).textTheme.titleLarge,
+                  const SizedBox(height: 18),
+                  AppPanel(
+                    child: SelectableText(
+                      password,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
                   ),
                 ],
               ),
@@ -122,36 +127,12 @@ class _CreateStudentScreenState extends State<CreateStudentScreen> {
     }
   }
 
-  Widget _field({
-    required TextEditingController controller,
-    required String label,
-    String? hint,
-    TextInputType? keyboardType,
-    bool required = false,
-    IconData? icon,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: keyboardType,
-        textInputAction: TextInputAction.next,
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: hint,
-          prefixIcon: icon == null ? null : Icon(icon),
-        ),
-        validator: required
-            ? (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return '$label wajib diisi';
-                }
+  String? _required(String label, String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return '$label wajib diisi';
+    }
 
-                return null;
-              }
-            : null,
-      ),
-    );
+    return null;
   }
 
   @override
@@ -164,33 +145,51 @@ class _CreateStudentScreenState extends State<CreateStudentScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
             children: [
-              const SectionTitle(
-                title: 'Data siswa',
-                subtitle: 'Informasi utama siswa yang akan didaftarkan.',
+              const PageIntro(
+                title: 'Data siswa baru',
+                subtitle: 'Masukkan data utama siswa terlebih dahulu, kemudian data orang tua jika diperlukan.',
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 28),
+              const SectionTitle(title: 'Informasi siswa'),
+              const SizedBox(height: 12),
               AppPanel(
-                padding: const EdgeInsets.all(18),
                 child: Column(
                   children: [
-                    _field(
+                    TextFormField(
                       controller: _nis,
-                      label: 'NIS',
-                      icon: Icons.badge_outlined,
-                      required: true,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'NIS',
+                        prefixIcon: Icon(Icons.badge_outlined),
+                      ),
+                      validator: (value) {
+                        return _required('NIS', value);
+                      },
                     ),
-                    _field(
+                    const SizedBox(height: 14),
+                    TextFormField(
                       controller: _name,
-                      label: 'Nama Siswa',
-                      icon: Icons.person_outline,
-                      required: true,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Nama Siswa',
+                        prefixIcon: Icon(Icons.person_outline_rounded),
+                      ),
+                      validator: (value) {
+                        return _required('Nama Siswa', value);
+                      },
                     ),
-                    _field(
+                    const SizedBox(height: 14),
+                    TextFormField(
                       controller: _className,
-                      label: 'Kelas',
-                      hint: 'Contoh: XII RPL 1',
-                      icon: Icons.class_outlined,
-                      required: true,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Kelas',
+                        hintText: 'Contoh: XII RPL 1',
+                        prefixIcon: Icon(Icons.class_outlined),
+                      ),
+                      validator: (value) {
+                        return _required('Kelas', value);
+                      },
                     ),
                   ],
                 ),
@@ -198,29 +197,48 @@ class _CreateStudentScreenState extends State<CreateStudentScreen> {
               const SizedBox(height: 26),
               const SectionTitle(
                 title: 'Data orang tua',
-                subtitle: 'Digunakan untuk akun orang tua dan informasi siswa.',
+                subtitle: 'Opsional apabila belum ingin membuat akun orang tua',
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               AppPanel(
-                padding: const EdgeInsets.all(18),
                 child: Column(
                   children: [
-                    _field(
+                    TextFormField(
                       controller: _guardianName,
-                      label: 'Nama Orang Tua',
-                      icon: Icons.supervisor_account_outlined,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Nama Orang Tua',
+                        prefixIcon: Icon(Icons.supervisor_account_outlined),
+                      ),
                     ),
-                    _field(
+                    const SizedBox(height: 14),
+                    TextFormField(
                       controller: _guardianEmail,
-                      label: 'Email Orang Tua',
                       keyboardType: TextInputType.emailAddress,
-                      icon: Icons.mail_outline,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Email Orang Tua',
+                        prefixIcon: Icon(Icons.mail_outline_rounded),
+                      ),
+                      validator: (value) {
+                        if (value != null &&
+                            value.trim().isNotEmpty &&
+                            !value.contains('@')) {
+                          return 'Format email tidak valid';
+                        }
+
+                        return null;
+                      },
                     ),
-                    _field(
+                    const SizedBox(height: 14),
+                    TextFormField(
                       controller: _guardianPhone,
-                      label: 'No. HP Orang Tua',
                       keyboardType: TextInputType.phone,
-                      icon: Icons.phone_outlined,
+                      textInputAction: TextInputAction.done,
+                      decoration: const InputDecoration(
+                        labelText: 'No. HP Orang Tua',
+                        prefixIcon: Icon(Icons.phone_outlined),
+                      ),
                     ),
                   ],
                 ),
@@ -230,10 +248,10 @@ class _CreateStudentScreenState extends State<CreateStudentScreen> {
                 onPressed: _loading ? null : _save,
                 child: _loading
                     ? const SizedBox(
-                        width: 21,
-                        height: 21,
+                        width: 20,
+                        height: 20,
                         child: CircularProgressIndicator(
-                          strokeWidth: 2.2,
+                          strokeWidth: 2,
                           color: Colors.white,
                         ),
                       )

@@ -21,10 +21,47 @@ class AppPanel extends StatelessWidget {
       padding: padding,
       decoration: BoxDecoration(
         color: scheme.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: scheme.outlineVariant),
       ),
       child: child,
+    );
+  }
+}
+
+class AppIconBox extends StatelessWidget {
+  const AppIconBox({
+    required this.icon,
+    super.key,
+    this.size = 42,
+    this.iconSize = 21,
+    this.backgroundColor,
+    this.foregroundColor,
+  });
+
+  final IconData icon;
+  final double size;
+  final double iconSize;
+  final Color? backgroundColor;
+  final Color? foregroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: backgroundColor ?? scheme.primaryContainer,
+        borderRadius: BorderRadius.circular(size * 0.28),
+      ),
+      alignment: Alignment.center,
+      child: Icon(
+        icon,
+        size: iconSize,
+        color: foregroundColor ?? scheme.onPrimaryContainer,
+      ),
     );
   }
 }
@@ -74,6 +111,35 @@ class SectionTitle extends StatelessWidget {
   }
 }
 
+class PageIntro extends StatelessWidget {
+  const PageIntro({required this.title, super.key, this.subtitle});
+
+  final String title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget subtitleWidget;
+
+    if (subtitle == null) {
+      subtitleWidget = const SizedBox.shrink();
+    } else {
+      subtitleWidget = Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: Text(subtitle!, style: Theme.of(context).textTheme.bodyMedium),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: Theme.of(context).textTheme.headlineSmall),
+        subtitleWidget,
+      ],
+    );
+  }
+}
+
 class EmptyState extends StatelessWidget {
   const EmptyState({
     required this.icon,
@@ -96,22 +162,20 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 58,
-              height: 58,
-              decoration: BoxDecoration(
-                color: scheme.primaryContainer,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: scheme.onPrimaryContainer, size: 28),
+            AppIconBox(
+              icon: icon,
+              size: 56,
+              iconSize: 26,
+              backgroundColor: scheme.surfaceContainer,
+              foregroundColor: scheme.onSurfaceVariant,
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             Text(
               title,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 5),
             Text(
               message,
               textAlign: TextAlign.center,
@@ -148,7 +212,7 @@ class StatusBadge extends StatelessWidget {
         label,
         style: TextStyle(
           color: foregroundColor,
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -171,7 +235,6 @@ class AppInfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-
     final shownValue = value.trim().isEmpty ? '-' : value;
 
     final Widget iconWidget;
@@ -186,13 +249,13 @@ class AppInfoRow extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 9),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           iconWidget,
           SizedBox(
-            width: 95,
+            width: 90,
             child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
           ),
           const SizedBox(width: 12),
@@ -204,6 +267,47 @@ class AppInfoRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class AppActionTile extends StatelessWidget {
+  const AppActionTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    super.key,
+    this.trailing,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return AppPanel(
+      padding: EdgeInsets.zero,
+      child: ListTile(
+        onTap: onTap,
+        minTileHeight: 74,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+        leading: AppIconBox(
+          icon: icon,
+          backgroundColor: scheme.surfaceContainer,
+          foregroundColor: scheme.onSurfaceVariant,
+        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+        subtitle: Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
+        trailing:
+            trailing ??
+            Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
       ),
     );
   }
