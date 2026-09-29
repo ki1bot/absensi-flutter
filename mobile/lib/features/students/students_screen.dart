@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app/theme.dart';
 import '../../app/widgets.dart';
 import '../../core/api/api_client.dart';
 
@@ -16,9 +15,11 @@ class StudentsScreen extends StatefulWidget {
 
 class _StudentsScreenState extends State<StudentsScreen> {
   final _api = ApiClient();
+
   final _searchController = TextEditingController();
 
   List<dynamic> _students = [];
+
   bool _loading = true;
 
   @override
@@ -72,12 +73,22 @@ class _StudentsScreenState extends State<StudentsScreen> {
     final changed = await context.push<bool>('/students/create');
 
     if (changed == true) {
-      _load();
+      await _load();
+    }
+  }
+
+  Future<void> _openStudent(int id) async {
+    await context.push('/students/$id');
+
+    if (mounted) {
+      await _load();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Data Siswa')),
       floatingActionButton: FloatingActionButton.extended(
@@ -101,6 +112,9 @@ class _StudentsScreenState extends State<StudentsScreen> {
                     : IconButton(
                         onPressed: () {
                           _searchController.clear();
+
+                          setState(() {});
+
                           _load();
                         },
                         icon: const Icon(Icons.close_rounded),
@@ -150,10 +164,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
                           padding: EdgeInsets.zero,
                           child: ListTile(
                             onTap: () {
-                              context.push(
-                                '/students/'
-                                '${student['id']}',
-                              );
+                              _openStudent(student['id'] as int);
                             },
                             minTileHeight: 76,
                             contentPadding: const EdgeInsets.symmetric(
@@ -162,8 +173,8 @@ class _StudentsScreenState extends State<StudentsScreen> {
                             ),
                             leading: CircleAvatar(
                               radius: 21,
-                              backgroundColor: AppColors.primarySoft,
-                              foregroundColor: AppColors.primary,
+                              backgroundColor: scheme.primaryContainer,
+                              foregroundColor: scheme.onPrimaryContainer,
                               child: Text(
                                 initial,
                                 style: const TextStyle(
@@ -184,9 +195,9 @@ class _StudentsScreenState extends State<StudentsScreen> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            trailing: const Icon(
+                            trailing: Icon(
                               Icons.chevron_right_rounded,
-                              color: AppColors.textMuted,
+                              color: scheme.onSurfaceVariant,
                             ),
                           ),
                         );

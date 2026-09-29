@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app/theme.dart';
 import '../../app/widgets.dart';
 import 'auth_controller.dart';
 
@@ -19,6 +18,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final _emailController = TextEditingController();
+
   final _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
@@ -79,6 +79,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(authControllerProvider);
 
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -95,30 +97,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Container(
-                          width: 58,
-                          height: 58,
+                          width: 54,
+                          height: 54,
                           decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(16),
+                            color: scheme.primary,
+                            borderRadius: BorderRadius.circular(15),
                           ),
                           child: const Icon(
                             Icons.school_rounded,
                             color: Colors.white,
-                            size: 31,
+                            size: 29,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 26),
                       Text(
                         'Selamat datang',
                         style: Theme.of(context).textTheme.headlineMedium,
                       ),
                       const SizedBox(height: 7),
-                      const Text(
+                      Text(
                         'Masuk sebagai Admin, Operator, atau Orang Tua',
-                        style: TextStyle(color: AppColors.textSecondary),
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 26),
                       AppPanel(
                         padding: const EdgeInsets.all(20),
                         child: Column(
@@ -204,16 +206,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 18),
                       Wrap(
                         alignment: WrapAlignment.center,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         spacing: 2,
                         runSpacing: 2,
                         children: [
-                          const Text(
+                          Text(
                             'Sekolah belum terdaftar?',
-                            style: TextStyle(color: AppColors.textSecondary),
+                            style: Theme.of(context).textTheme.bodyMedium,
                           ),
                           TextButton(
                             onPressed: () {
@@ -223,15 +225,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'E-Absensi Siswa membantu sekolah mencatat kehadiran dengan lebih sederhana.',
+                      const SizedBox(height: 6),
+                      Text(
+                        'E-Absensi Siswa',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 12,
-                          height: 1.5,
-                        ),
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
                   ),

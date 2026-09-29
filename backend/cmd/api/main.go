@@ -27,7 +27,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	db, err := database.Open(cfg.DatabaseURL)
+	db, err := database.Open(
+		cfg.DatabaseURL,
+	)
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -75,22 +78,37 @@ func main() {
 		DB: db,
 	}
 
-	authMiddleware := middleware.Authentication(
-		[]byte(cfg.JWTSecret),
-	)
+	authMiddleware :=
+		middleware.Authentication(
+			[]byte(
+				cfg.JWTSecret,
+			),
+		)
 
-	adminOnly := middleware.RequireRoles("admin")
-	scannerRoles := middleware.RequireRoles(
-		"admin",
-		"operator",
-	)
-	parentOnly := middleware.RequireRoles("parent")
+	adminOnly :=
+		middleware.RequireRoles(
+			"admin",
+		)
+
+	scannerRoles :=
+		middleware.RequireRoles(
+			"admin",
+			"operator",
+		)
+
+	parentOnly :=
+		middleware.RequireRoles(
+			"parent",
+		)
 
 	mux := http.NewServeMux()
 
 	mux.HandleFunc(
 		"GET /",
-		func(w http.ResponseWriter, r *http.Request) {
+		func(
+			w http.ResponseWriter,
+			r *http.Request,
+		) {
 			writeJSON(
 				w,
 				http.StatusOK,
@@ -103,13 +121,18 @@ func main() {
 
 	mux.HandleFunc(
 		"GET /health",
-		func(w http.ResponseWriter, r *http.Request) {
+		func(
+			w http.ResponseWriter,
+			r *http.Request,
+		) {
 			var databaseTime time.Time
 
 			err := db.QueryRow(
 				r.Context(),
 				"SELECT NOW()",
-			).Scan(&databaseTime)
+			).Scan(
+				&databaseTime,
+			)
 
 			if err != nil {
 				writeJSON(
@@ -154,21 +177,38 @@ func main() {
 	mux.Handle(
 		"POST /api/v1/auth/logout",
 		authMiddleware(
-			http.HandlerFunc(authHandler.Logout),
+			http.HandlerFunc(
+				authHandler.Logout,
+			),
 		),
 	)
 
 	mux.Handle(
 		"GET /api/v1/auth/me",
 		authMiddleware(
-			http.HandlerFunc(authHandler.Me),
+			http.HandlerFunc(
+				authHandler.Me,
+			),
+		),
+	)
+
+	mux.Handle(
+		"PUT /api/v1/admin/profile",
+		authMiddleware(
+			adminOnly(
+				http.HandlerFunc(
+					authHandler.UpdateProfile,
+				),
+			),
 		),
 	)
 
 	mux.Handle(
 		"GET /api/v1/school",
 		authMiddleware(
-			http.HandlerFunc(schoolHandler.Detail),
+			http.HandlerFunc(
+				schoolHandler.Detail,
+			),
 		),
 	)
 
@@ -187,7 +227,9 @@ func main() {
 		"GET /api/v1/students",
 		authMiddleware(
 			scannerRoles(
-				http.HandlerFunc(studentHandler.List),
+				http.HandlerFunc(
+					studentHandler.List,
+				),
 			),
 		),
 	)
@@ -196,7 +238,9 @@ func main() {
 		"POST /api/v1/students",
 		authMiddleware(
 			adminOnly(
-				http.HandlerFunc(studentHandler.Create),
+				http.HandlerFunc(
+					studentHandler.Create,
+				),
 			),
 		),
 	)
@@ -205,7 +249,20 @@ func main() {
 		"GET /api/v1/students/{id}",
 		authMiddleware(
 			scannerRoles(
-				http.HandlerFunc(studentHandler.Detail),
+				http.HandlerFunc(
+					studentHandler.Detail,
+				),
+			),
+		),
+	)
+
+	mux.Handle(
+		"PUT /api/v1/students/{id}",
+		authMiddleware(
+			adminOnly(
+				http.HandlerFunc(
+					studentHandler.Update,
+				),
 			),
 		),
 	)
@@ -214,7 +271,9 @@ func main() {
 		"GET /api/v1/students/{id}/qr",
 		authMiddleware(
 			adminOnly(
-				http.HandlerFunc(studentHandler.QR),
+				http.HandlerFunc(
+					studentHandler.QR,
+				),
 			),
 		),
 	)
@@ -223,7 +282,9 @@ func main() {
 		"DELETE /api/v1/students/{id}",
 		authMiddleware(
 			adminOnly(
-				http.HandlerFunc(studentHandler.Delete),
+				http.HandlerFunc(
+					studentHandler.Delete,
+				),
 			),
 		),
 	)
@@ -273,32 +334,41 @@ func main() {
 	)
 
 	server := &http.Server{
-		Addr:              ":" + cfg.Port,
-		Handler:           mux,
-		ReadHeaderTimeout: 5 * time.Second,
-		ReadTimeout:       15 * time.Second,
-		WriteTimeout:      15 * time.Second,
-		IdleTimeout:       60 * time.Second,
+		Addr: ":" + cfg.Port,
+		Handler: mux,
+		ReadHeaderTimeout:
+			5 * time.Second,
+		ReadTimeout:
+			15 * time.Second,
+		WriteTimeout:
+			15 * time.Second,
+		IdleTimeout:
+			60 * time.Second,
 	}
 
-	shutdownSignal, stop := signal.NotifyContext(
-		context.Background(),
-		syscall.SIGINT,
-		syscall.SIGTERM,
-	)
+	shutdownSignal, stop :=
+		signal.NotifyContext(
+			context.Background(),
+			syscall.SIGINT,
+			syscall.SIGTERM,
+		)
 
 	defer stop()
 
 	go func() {
 		<-shutdownSignal.Done()
 
-		ctx, cancel := context.WithTimeout(
-			context.Background(),
-			10*time.Second,
-		)
+		ctx, cancel :=
+			context.WithTimeout(
+				context.Background(),
+				10*time.Second,
+			)
+
 		defer cancel()
 
-		if err := server.Shutdown(ctx); err != nil {
+		if err := server.Shutdown(
+			ctx,
+		); err != nil {
 			log.Printf(
 				"graceful shutdown gagal: %v",
 				err,
@@ -314,7 +384,10 @@ func main() {
 	err = server.ListenAndServe()
 
 	if err != nil &&
-		!errors.Is(err, http.ErrServerClosed) {
+		!errors.Is(
+			err,
+			http.ErrServerClosed,
+		) {
 		log.Fatal(err)
 	}
 }
@@ -329,9 +402,16 @@ func writeJSON(
 		"application/json",
 	)
 
-	w.WriteHeader(status)
+	w.WriteHeader(
+		status,
+	)
 
-	if err := json.NewEncoder(w).Encode(value); err != nil {
-		log.Printf("JSON encode error: %v", err)
+	if err := json.NewEncoder(
+		w,
+	).Encode(value); err != nil {
+		log.Printf(
+			"JSON encode error: %v",
+			err,
+		)
 	}
 }

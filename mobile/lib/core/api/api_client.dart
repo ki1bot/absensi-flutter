@@ -12,7 +12,9 @@ class ApiException implements Exception {
   final int? statusCode;
 
   @override
-  String toString() => message;
+  String toString() {
+    return message;
+  }
 }
 
 class ApiClient {
@@ -21,9 +23,10 @@ class ApiClient {
       _client = client ?? http.Client();
 
   final TokenStorage _tokenStorage;
+
   final http.Client _client;
 
-  Future<dynamic> get(String path) async {
+  Future<dynamic> get(String path) {
     return _request(method: 'GET', path: path);
   }
 
@@ -31,7 +34,7 @@ class ApiClient {
     String path, {
     Map<String, dynamic>? body,
     bool authenticated = true,
-  }) async {
+  }) {
     return _request(
       method: 'POST',
       path: path,
@@ -40,7 +43,20 @@ class ApiClient {
     );
   }
 
-  Future<dynamic> delete(String path) async {
+  Future<dynamic> put(
+    String path, {
+    Map<String, dynamic>? body,
+    bool authenticated = true,
+  }) {
+    return _request(
+      method: 'PUT',
+      path: path,
+      body: body,
+      authenticated: authenticated,
+    );
+  }
+
+  Future<dynamic> delete(String path) {
     return _request(method: 'DELETE', path: path);
   }
 
@@ -67,25 +83,24 @@ class ApiClient {
 
     late http.Response response;
 
-    switch (method) {
-      case 'GET':
-        response = await _client.get(uri, headers: headers);
-        break;
-
-      case 'POST':
-        response = await _client.post(
-          uri,
-          headers: headers,
-          body: jsonEncode(body ?? {}),
-        );
-        break;
-
-      case 'DELETE':
-        response = await _client.delete(uri, headers: headers);
-        break;
-
-      default:
-        throw const ApiException('HTTP method tidak didukung');
+    if (method == 'GET') {
+      response = await _client
+          .get(uri, headers: headers)
+          .timeout(const Duration(seconds: 15));
+    } else if (method == 'POST') {
+      response = await _client
+          .post(uri, headers: headers, body: jsonEncode(body ?? {}))
+          .timeout(const Duration(seconds: 15));
+    } else if (method == 'PUT') {
+      response = await _client
+          .put(uri, headers: headers, body: jsonEncode(body ?? {}))
+          .timeout(const Duration(seconds: 15));
+    } else if (method == 'DELETE') {
+      response = await _client
+          .delete(uri, headers: headers)
+          .timeout(const Duration(seconds: 15));
+    } else {
+      throw const ApiException('HTTP method tidak didukung');
     }
 
     dynamic decoded;

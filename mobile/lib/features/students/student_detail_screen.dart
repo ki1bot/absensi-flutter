@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-import '../../app/theme.dart';
 import '../../app/widgets.dart';
 import '../../core/api/api_client.dart';
 
@@ -20,6 +20,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
   final _api = ApiClient();
 
   Map<String, dynamic>? _student;
+
   String? _qrPayload;
 
   bool _loadingQR = false;
@@ -40,11 +41,11 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
 
   Future<void> _load() async {
     try {
-      final student = await _api.get('/api/v1/students/${widget.studentId}');
+      final result = await _api.get('/api/v1/students/${widget.studentId}');
 
       if (mounted) {
         setState(() {
-          _student = Map<String, dynamic>.from(student);
+          _student = Map<String, dynamic>.from(result);
         });
       }
     } catch (error) {
@@ -55,16 +56,28 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
     }
   }
 
+  Future<void> _openEdit() async {
+    final changed = await context.push<bool>(
+      '/students/${widget.studentId}/edit',
+    );
+
+    if (changed == true && mounted) {
+      setState(() {
+        _student = null;
+        _qrPayload = null;
+      });
+
+      await _load();
+    }
+  }
+
   Future<void> _loadQR() async {
     setState(() {
       _loadingQR = true;
     });
 
     try {
-      final result = await _api.get(
-        '/api/v1/students/'
-        '${widget.studentId}/qr',
-      );
+      final result = await _api.get('/api/v1/students/${widget.studentId}/qr');
 
       if (mounted) {
         setState(() {
@@ -89,8 +102,20 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
   Widget build(BuildContext context) {
     final student = _student;
 
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Detail Siswa')),
+      appBar: AppBar(
+        title: const Text('Detail Siswa'),
+        actions: [
+          IconButton(
+            tooltip: 'Edit siswa',
+            onPressed: student == null ? null : _openEdit,
+            icon: const Icon(Icons.edit_outlined),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: student == null
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -101,8 +126,8 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                     children: [
                       CircleAvatar(
                         radius: 30,
-                        backgroundColor: AppColors.primarySoft,
-                        foregroundColor: AppColors.primary,
+                        backgroundColor: scheme.primaryContainer,
+                        foregroundColor: scheme.onPrimaryContainer,
                         child: Text(
                           student['name'].toString().isEmpty
                               ? '?'
@@ -125,6 +150,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                             const SizedBox(height: 4),
                             Text(
                               '${student['class_name']}  •  NIS ${student['nis']}',
+                              style: Theme.of(context).textTheme.bodyMedium,
                             ),
                           ],
                         ),
@@ -167,7 +193,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                       AppInfoRow(
                         label: 'Email',
                         value: student['guardian_email'].toString(),
-                        icon: Icons.mail_outline,
+                        icon: Icons.mail_outline_rounded,
                       ),
                       const Divider(),
                       AppInfoRow(
@@ -181,7 +207,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                 const SizedBox(height: 22),
                 const SectionTitle(
                   title: 'QR Absensi',
-                  subtitle: 'QR ini digunakan saat proses absensi siswa.',
+                  subtitle: 'Gunakan QR ini saat proses absensi siswa.',
                 ),
                 const SizedBox(height: 12),
                 AppPanel(
@@ -194,19 +220,20 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                               width: 68,
                               height: 68,
                               decoration: BoxDecoration(
-                                color: AppColors.primarySoft,
+                                color: scheme.primaryContainer,
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              child: const Icon(
-                                Icons.qr_code_2,
+                              child: Icon(
+                                Icons.qr_code_2_rounded,
                                 size: 38,
-                                color: AppColors.primary,
+                                color: scheme.onPrimaryContainer,
                               ),
                             ),
                             const SizedBox(height: 16),
-                            const Text(
+                            Text(
                               'Tampilkan QR untuk kartu absensi siswa.',
                               textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.bodyMedium,
                             ),
                             const SizedBox(height: 18),
                             SizedBox(
@@ -228,19 +255,18 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                               padding: const EdgeInsets.all(18),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: AppColors.border),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: const Color(0xFFE4E7EC),
+                                ),
                               ),
                               child: QrImageView(data: _qrPayload!, size: 220),
                             ),
                             const SizedBox(height: 14),
-                            const Text(
+                            Text(
                               'QR hanya digunakan untuk proses absensi.',
                               textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 12,
-                              ),
+                              style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
                         ),

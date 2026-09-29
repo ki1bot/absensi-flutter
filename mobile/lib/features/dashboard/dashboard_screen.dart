@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/theme.dart';
+import '../../app/theme_controller.dart';
 import '../../app/widgets.dart';
 import '../../core/api/api_client.dart';
 import '../auth/auth_controller.dart';
@@ -20,6 +21,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   final _api = ApiClient();
 
   Map<String, dynamic>? _stats;
+
   bool _loading = true;
 
   @override
@@ -66,26 +68,35 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     }
   }
 
-  Future<void> _logout() async {
-    await ref.read(authControllerProvider.notifier).logout();
-
-    if (mounted) {
-      context.go('/login');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authControllerProvider).user;
 
+    ref.watch(themeControllerProvider);
+
+    final dark = Theme.of(context).brightness == Brightness.dark;
+
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('E-Absensi'),
+        title: const Text('Beranda'),
         actions: [
           IconButton(
-            tooltip: 'Keluar',
-            onPressed: _logout,
-            icon: const Icon(Icons.logout_rounded),
+            tooltip: dark ? 'Tema terang' : 'Tema gelap',
+            onPressed: () {
+              ref.read(themeControllerProvider.notifier).setDark(!dark);
+            },
+            icon: Icon(
+              dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+            ),
+          ),
+          IconButton(
+            tooltip: 'Profil admin',
+            onPressed: () {
+              context.push('/admin/profile');
+            },
+            icon: const Icon(Icons.account_circle_outlined),
           ),
           const SizedBox(width: 8),
         ],
@@ -96,21 +107,53 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
           children: [
-            Text(
-              'Halo, ${user?.name ?? 'Admin'}',
-              style: Theme.of(context).textTheme.headlineSmall,
+            AppPanel(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 27,
+                    backgroundColor: scheme.primaryContainer,
+                    foregroundColor: scheme.onPrimaryContainer,
+                    child: Text(
+                      user?.name.isNotEmpty == true
+                          ? user!.name[0].toUpperCase()
+                          : 'A',
+                      style: const TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 15),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Halo, ${user?.name ?? 'Admin'}',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'Berikut ringkasan kehadiran hari ini.',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 5),
-            const Text('Berikut ringkasan kehadiran siswa hari ini.'),
             const SizedBox(height: 26),
             const SectionTitle(
               title: 'Ringkasan hari ini',
-              subtitle: 'Tarik halaman ke bawah untuk memperbarui data.',
+              subtitle: 'Tarik ke bawah untuk memperbarui data.',
             ),
             const SizedBox(height: 14),
             if (_loading)
               const SizedBox(
-                height: 180,
+                height: 190,
                 child: Center(child: CircularProgressIndicator()),
               )
             else
@@ -120,14 +163,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 crossAxisCount: 2,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: 1.45,
+                childAspectRatio: 1.42,
                 children: [
                   _StatCard(
                     title: 'Total Siswa',
                     value: '${_stats?['total_students'] ?? 0}',
                     icon: Icons.groups_2_outlined,
-                    color: AppColors.primary,
-                    backgroundColor: AppColors.primarySoft,
+                    color: scheme.primary,
+                    backgroundColor: scheme.primaryContainer,
                   ),
                   _StatCard(
                     title: 'Hadir',
@@ -147,21 +190,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     title: 'Belum Hadir',
                     value: '${_stats?['not_present'] ?? 0}',
                     icon: Icons.person_off_outlined,
-                    color: AppColors.textSecondary,
-                    backgroundColor: AppColors.background,
+                    color: scheme.onSurfaceVariant,
+                    backgroundColor: scheme.surfaceContainer,
                   ),
                 ],
               ),
             const SizedBox(height: 28),
             const SectionTitle(
-              title: 'Menu utama',
-              subtitle: 'Kelola siswa dan proses absensi.',
+              title: 'Kelola',
+              subtitle: 'Akses fitur utama aplikasi.',
             ),
             const SizedBox(height: 14),
             _MenuTile(
               icon: Icons.people_outline_rounded,
               title: 'Data Siswa',
-              subtitle: 'Lihat, cari, dan tambah data siswa',
+              subtitle: 'Tambah, lihat, dan edit data siswa',
               onTap: () {
                 context.push('/students');
               },
@@ -182,6 +225,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               subtitle: 'Lihat catatan kehadiran siswa',
               onTap: () {
                 context.push('/attendances');
+              },
+            ),
+            const SizedBox(height: 10),
+            _MenuTile(
+              icon: Icons.manage_accounts_outlined,
+              title: 'Profil Admin',
+              subtitle: 'Kelola akun dan pengaturan tampilan',
+              onTap: () {
+                context.push('/admin/profile');
               },
             ),
           ],
@@ -215,11 +267,11 @@ class _StatCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Container(
-            width: 36,
-            height: 36,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
               color: backgroundColor,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(11),
             ),
             child: Icon(icon, color: color, size: 20),
           ),
@@ -229,7 +281,7 @@ class _StatCard extends StatelessWidget {
               Text(
                 value,
                 style: Theme.of(context).textTheme.headlineSmall
-                    ?.copyWith(fontSize: 24),
+                    ?.copyWith(fontSize: 25),
               ),
               const SizedBox(height: 2),
               Text(
@@ -261,6 +313,8 @@ class _MenuTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return AppPanel(
       padding: EdgeInsets.zero,
       child: ListTile(
@@ -271,16 +325,16 @@ class _MenuTile extends StatelessWidget {
           width: 42,
           height: 42,
           decoration: BoxDecoration(
-            color: AppColors.primarySoft,
+            color: scheme.primaryContainer,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: AppColors.primary, size: 22),
+          child: Icon(icon, color: scheme.onPrimaryContainer, size: 22),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(subtitle),
-        trailing: const Icon(
+        trailing: Icon(
           Icons.chevron_right_rounded,
-          color: AppColors.textMuted,
+          color: scheme.onSurfaceVariant,
         ),
       ),
     );

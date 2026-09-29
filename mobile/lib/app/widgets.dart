@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'theme.dart';
-
 class AppPanel extends StatelessWidget {
   const AppPanel({
     required this.child,
@@ -16,13 +14,15 @@ class AppPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Container(
       margin: margin,
       padding: padding,
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: child,
     );
@@ -43,17 +43,18 @@ class SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final subtitleWidget = subtitle == null
-        ? const SizedBox.shrink()
-        : Padding(
-            padding: const EdgeInsets.only(top: 3),
-            child: Text(
-              subtitle!,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          );
+    final Widget subtitleWidget;
 
-    final trailingWidget = trailing ?? const SizedBox.shrink();
+    if (subtitle == null) {
+      subtitleWidget = const SizedBox.shrink();
+    } else {
+      subtitleWidget = Padding(
+        padding: const EdgeInsets.only(top: 3),
+        child: Text(subtitle!, style: Theme.of(context).textTheme.bodySmall),
+      );
+    }
+
+    final Widget trailingWidget = trailing ?? const SizedBox.shrink();
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -87,6 +88,8 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 56),
@@ -96,11 +99,11 @@ class EmptyState extends StatelessWidget {
             Container(
               width: 58,
               height: 58,
-              decoration: const BoxDecoration(
-                color: AppColors.primarySoft,
+              decoration: BoxDecoration(
+                color: scheme.primaryContainer,
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: AppColors.primary, size: 28),
+              child: Icon(icon, color: scheme.onPrimaryContainer, size: 28),
             ),
             const SizedBox(height: 18),
             Text(
@@ -167,17 +170,27 @@ class AppInfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     final shownValue = value.trim().isEmpty ? '-' : value;
+
+    final Widget iconWidget;
+
+    if (icon == null) {
+      iconWidget = const SizedBox.shrink();
+    } else {
+      iconWidget = Padding(
+        padding: const EdgeInsets.only(right: 12),
+        child: Icon(icon, size: 19, color: scheme.onSurfaceVariant),
+      );
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 9),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (icon != null) ...[
-            Icon(icon, size: 19, color: AppColors.textSecondary),
-            const SizedBox(width: 12),
-          ],
+          iconWidget,
           SizedBox(
             width: 95,
             child: Text(label, style: Theme.of(context).textTheme.bodyMedium),

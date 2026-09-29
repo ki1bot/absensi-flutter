@@ -47,6 +47,7 @@ class AuthState {
 
 class AuthController extends Notifier<AuthState> {
   final _api = ApiClient();
+
   final _storage = const TokenStorage();
 
   @override
@@ -112,11 +113,15 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
+  void updateUser(AppUser user) {
+    state = AuthState(user: user, loading: false);
+  }
+
   Future<void> logout() async {
     final refreshToken = await _storage.readRefreshToken();
 
     try {
-      if (refreshToken != null) {
+      if (refreshToken != null && refreshToken.isNotEmpty) {
         await _api.post(
           '/api/v1/auth/logout',
           body: {'refresh_token': refreshToken},
