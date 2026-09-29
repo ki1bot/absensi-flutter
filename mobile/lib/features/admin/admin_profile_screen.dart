@@ -115,7 +115,6 @@ class _AdminProfileScreenState extends ConsumerState<AdminProfileScreen> {
   Widget build(BuildContext context) {
     ref.watch(themeControllerProvider);
 
-    final dark = Theme.of(context).brightness == Brightness.dark;
     final scheme = Theme.of(context).colorScheme;
 
     final name = _nameController.text.trim();
@@ -269,38 +268,6 @@ class _AdminProfileScreenState extends ConsumerState<AdminProfileScreen> {
                       ),
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(height: 28),
-              const SectionTitle(title: 'Preferensi'),
-              const SizedBox(height: 12),
-              AppPanel(
-                padding: EdgeInsets.zero,
-                child: SwitchListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 4,
-                  ),
-                  value: dark,
-                  onChanged: (value) {
-                    ref.read(themeControllerProvider.notifier).setDark(value);
-                  },
-                  secondary: AppIconBox(
-                    icon: dark
-                        ? Icons.dark_mode_outlined
-                        : Icons.light_mode_outlined,
-                    backgroundColor: scheme.surfaceContainer,
-                    foregroundColor: scheme.onSurfaceVariant,
-                  ),
-                  title: const Text(
-                    'Tema gelap',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(
-                    dark
-                        ? 'Tema gelap sedang digunakan'
-                        : 'Tema terang sedang digunakan',
-                  ),
                 ),
               ),
               const SizedBox(height: 28),
