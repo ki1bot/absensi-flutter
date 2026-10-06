@@ -36,6 +36,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   void dispose() {
     _api.close();
 
+
     super.dispose();
   }
 
